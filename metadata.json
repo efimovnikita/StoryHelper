@@ -1,0 +1,5 @@
+{
+  "name": "Story Helper",
+  "description": "An Italian storytelling practice app. Generate random Italian keywords based on your chosen topic and weave them into a continuous story.",
+  "requestFramePermissions": []
+}
