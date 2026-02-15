@@ -329,6 +329,27 @@ const GameScreen: React.FC<{
     onFinish(fullStory, currentIndex + 1);
   };
 
+  const handleSaveProgress = () => {
+    const storyText = analyzedSentences.map(s => s.original).join(' ');
+    if (!storyText.trim()) {
+      alert("There's no story written yet to save!");
+      return;
+    }
+
+    const dateStr = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+    const filename = `story-progress-${dateStr}.txt`;
+
+    const blob = new Blob([storyText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link); // Clean up the DOM
+    URL.revokeObjectURL(url); // Release the object URL
+  };
+
   const hasCorrections = pendingAnalysis?.segments.some(s => s.isCorrection);
   
   // Stats calculation
@@ -608,6 +629,16 @@ const GameScreen: React.FC<{
              </div>
 
              <div className="flex gap-2 w-full sm:w-auto">
+                {/* Save Progress Button */}
+                <Button
+                  onClick={handleSaveProgress}
+                  disabled={analyzedSentences.length === 0}
+                  variant="secondary"
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 py-2.5 px-4 text-sm"
+                >
+                  <Download size={16} /> Save
+                </Button>
+
                 {/* Manual Check Button */}
                 <Button
                    onClick={() => processSentence(currentInput)}
@@ -763,10 +794,10 @@ Grammar: ${evaluation.grammarFeedback}
 
       <div className="flex justify-center gap-4">
         <Button onClick={handleDownload} variant="secondary">
-           <Download size={18} className="mr-2 inline" /> <span className="hidden md:inline">Save Story</span>
+           <Download size={18} className="md:mr-2 inline" /> <span className="hidden md:inline">Save Story</span>
         </Button>
         <Button onClick={onRestart}>
-           <RefreshCw size={18} className="mr-2 inline" /> <span className="hidden md:inline">Start New Lesson</span>
+           <RefreshCw size={18} className="md:mr-2 inline" /> <span className="hidden md:inline">Start New Lesson</span>
         </Button>
       </div>
     </div>
