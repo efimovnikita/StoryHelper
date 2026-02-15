@@ -250,6 +250,10 @@ const GameScreen: React.FC<{
     try {
       const result = await analyzeSentence(text);
       setPendingAnalysis(result);
+      // Scroll to the input field on mobile devices after analysis results are displayed
+      if (textareaRef.current) {
+        textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     } catch (error) {
       console.error("Failed to analyze", error);
     } finally {
