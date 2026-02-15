@@ -897,7 +897,7 @@ const App = () => {
 
       {/* Footer */}
       <div className="fixed bottom-4 text-center text-xs text-gray-400 pointer-events-none">
-        Powered by Mistral AI
+        Powered by Maskedball
       </div>
     </div>
   );
