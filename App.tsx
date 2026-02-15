@@ -763,10 +763,10 @@ Grammar: ${evaluation.grammarFeedback}
 
       <div className="flex justify-center gap-4">
         <Button onClick={handleDownload} variant="secondary">
-           <Download size={18} className="mr-2 inline" /> Save Story
+           <Download size={18} className="mr-2 inline" /> <span className="hidden md:inline">Save Story</span>
         </Button>
         <Button onClick={onRestart}>
-           <RefreshCw size={18} className="mr-2 inline" /> Start New Lesson
+           <RefreshCw size={18} className="mr-2 inline" /> <span className="hidden md:inline">Start New Lesson</span>
         </Button>
       </div>
     </div>
