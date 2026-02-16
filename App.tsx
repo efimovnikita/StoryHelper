@@ -16,6 +16,7 @@ const SetupScreen: React.FC<{
   const [apiKey, setApiKey] = useState('');
   const [historyCount, setHistoryCount] = useState(0);
   const [history, setHistory] = useState<string[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     const storedKey = localStorage.getItem('mistral_api_key');
@@ -100,17 +101,23 @@ const SetupScreen: React.FC<{
 
             <div className="pt-2 border-t border-slate-200">
                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2 text-slate-700 font-medium text-sm">
+                  <button 
+                    onClick={() => setShowHistory(!showHistory)}
+                    className="flex items-center gap-2 text-slate-700 font-medium text-sm hover:text-indigo-600 transition-colors"
+                  >
                     <Eraser size={16} />
                     <span>Word Memory</span>
-                  </div>
+                    {history.length > 0 && (
+                      showHistory ? <ChevronUp size={14} /> : <ChevronDown size={14} />
+                    )}
+                  </button>
                   <span className="text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">{historyCount} words</span>
                </div>
                <p className="text-xs text-slate-400 mb-2">
                  The app remembers generated words to avoid repetition.
                </p>
-               {history.length > 0 && (
-                 <div className="flex flex-wrap gap-2 text-xs text-slate-500 mb-2 p-2 rounded-md max-h-20 overflow-y-auto">
+               {history.length > 0 && showHistory && (
+                 <div className="flex flex-wrap gap-2 text-xs text-slate-500 mb-2 p-2 rounded-md max-h-40 overflow-y-auto bg-white/50 border border-slate-100">
                    {history.map((word, index) => (
                      <span key={index} className="bg-slate-200 px-2 py-1 rounded-md flex items-center gap-1">
                        {word}
