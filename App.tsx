@@ -454,11 +454,39 @@ const GameScreen: React.FC<{
                   <div className="text-[10px] font-bold text-gray-400 uppercase mb-3 tracking-wider text-center">Common Pairs</div>
                   <div className="flex flex-col gap-2">
                     {currentWord.collocations.map((col, idx) => (
-                      <div 
-                        key={idx} 
-                        className="px-3 py-2 bg-white text-gray-600 rounded-lg text-sm border border-gray-200 font-medium shadow-sm"
+                      <div
+                        key={idx}
+                        className="flex items-center px-3 py-2 bg-white text-gray-600 rounded-lg text-sm border border-gray-200 font-medium shadow-sm"
                       >
-                        {col}
+                        <span className="flex-grow">{col}</span>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(col)
+                              .then(() => {
+                                console.log('Text copied to clipboard:', col);
+                              })
+                              .catch(err => {
+                                console.error('Failed to copy text:', err);
+                              });
+                          }}
+                          className="ml-2 p-1 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded-md"
+                          title="Copy to clipboard"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M16 16a1 1 0 11-2 0 1 1 0 012 0z"
+                            />
+                          </svg>
+                        </button>
                       </div>
                     ))}
                   </div>
