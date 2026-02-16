@@ -15,16 +15,19 @@ const SetupScreen: React.FC<{
   const [showSettings, setShowSettings] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [historyCount, setHistoryCount] = useState(0);
+  const [history, setHistory] = useState<string[]>([]);
 
   useEffect(() => {
     const storedKey = localStorage.getItem('mistral_api_key');
     if (storedKey) setApiKey(storedKey);
     
     // Check word history
-    const history = localStorage.getItem('mistral_word_history');
-    if (history) {
+    const historyStr = localStorage.getItem('mistral_word_history');
+    if (historyStr) {
       try {
-        setHistoryCount(JSON.parse(history).length);
+        const historyArr = JSON.parse(historyStr);
+        setHistory(historyArr);
+        setHistoryCount(historyArr.length);
       } catch (e) {
         console.error("Error reading history", e);
       }
@@ -41,6 +44,7 @@ const SetupScreen: React.FC<{
     if (window.confirm("Are you sure? This will make the AI forget which words it has already generated for you.")) {
       localStorage.removeItem('mistral_word_history');
       setHistoryCount(0);
+      setHistory([]);
     }
   };
 
@@ -105,6 +109,15 @@ const SetupScreen: React.FC<{
                <p className="text-xs text-slate-400 mb-2">
                  The app remembers generated words to avoid repetition.
                </p>
+               {history.length > 0 && (
+                 <div className="flex flex-wrap gap-2 text-xs text-slate-500 mb-2 p-2 rounded-md max-h-20 overflow-y-auto">
+                   {history.map((word, index) => (
+                     <span key={index} className="bg-slate-200 px-2 py-1 rounded-md">
+                       {word}
+                     </span>
+                   ))}
+                 </div>
+               )}
                <button 
                  onClick={handleClearHistory}
                  disabled={historyCount === 0}
