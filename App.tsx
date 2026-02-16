@@ -112,8 +112,24 @@ const SetupScreen: React.FC<{
                {history.length > 0 && (
                  <div className="flex flex-wrap gap-2 text-xs text-slate-500 mb-2 p-2 rounded-md max-h-20 overflow-y-auto">
                    {history.map((word, index) => (
-                     <span key={index} className="bg-slate-200 px-2 py-1 rounded-md">
+                     <span key={index} className="bg-slate-200 px-2 py-1 rounded-md flex items-center gap-1">
                        {word}
+                       <button
+                         onClick={() => {
+                           // Filter out the word to delete
+                           const updatedHistory = history.filter(item => item !== word);
+                           // Update local storage
+                           localStorage.setItem('mistral_word_history', JSON.stringify(updatedHistory));
+                           // Update state, assuming setHistory is available in this scope
+                           setHistory(updatedHistory);
+                           // Decrement the history count
+                           setHistoryCount(historyCount - 1);
+                         }}
+                         className="ml-1 text-slate-400 hover:text-red-600 focus:outline-none"
+                         aria-label={`Remove ${word}`}
+                       >
+                         &times;
+                       </button>
                      </span>
                    ))}
                  </div>
