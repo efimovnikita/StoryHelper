@@ -959,10 +959,6 @@ const App = () => {
          </div>
       )}
 
-      {/* Footer */}
-      <div className="fixed bottom-4 text-center text-xs text-gray-400 pointer-events-none">
-        Powered by Maskedball
-      </div>
     </div>
   );
 };
