@@ -3,7 +3,7 @@ import { GameState, StoryConfig, EvaluationResult, WordPair, SentenceAnalysis } 
 import { generateNextWord, evaluateStory, analyzeSentence } from './services/mistralService';
 import { Button } from './components/Button';
 import { Badge } from './components/Badge';
-import { BookOpen, Sparkles, CheckCircle, AlertCircle, RefreshCw, PenTool, BrainCircuit, ArrowRight, Send, Loader2, Check, X, Wand2, Search, ArrowUp, ArrowDown, Trash2, ChevronRight, ChevronDown, ChevronUp, Menu, Shuffle, PenLine, Download, Settings, KeyRound, Eraser, Share2, Copy } from 'lucide-react';
+import { BookOpen, Sparkles, CheckCircle, AlertCircle, RefreshCw, PenTool, BrainCircuit, ArrowRight, Send, Loader2, Check, X, Wand2, Search, ArrowUp, ArrowDown, Trash2, ChevronRight, ChevronDown, ChevronUp, Menu, Shuffle, PenLine, Download, Settings, KeyRound, Eraser, Share2, Copy, ExternalLink } from 'lucide-react';
 
 // --- Sub-components for Screens ---
 
@@ -971,13 +971,24 @@ Grammar: ${evaluation.grammarFeedback}
                 value={shareUrl} 
                 className="flex-1 px-3 py-2 bg-white border border-green-200 rounded-lg text-sm text-gray-700 outline-none"
               />
+              
               <button 
                 onClick={copyToClipboard}
-                className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex shrink-0"
+                className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex shrink-0 shadow-sm"
                 title="Copy to clipboard"
               >
                 {hasCopied ? <Check size={18} /> : <Copy size={18} />}
               </button>
+  
+              <a 
+                href={shareUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 bg-white border border-green-200 hover:bg-green-50 text-green-700 rounded-lg transition-colors flex shrink-0 shadow-sm"
+                title="Open article in new tab"
+              >
+                <ExternalLink size={18} />
+              </a>
             </div>
           </div>
         )}
