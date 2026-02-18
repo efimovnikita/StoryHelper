@@ -964,31 +964,34 @@ Grammar: ${evaluation.grammarFeedback}
             <p className="text-sm text-green-800 font-medium text-center">
               Shareable link created!
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input 
                 type="text" 
                 readOnly 
                 value={shareUrl} 
-                className="flex-1 px-3 py-2 bg-white border border-green-200 rounded-lg text-sm text-gray-700 outline-none"
+                className="flex-1 px-3 py-2 bg-white border border-green-200 rounded-lg text-sm text-gray-700 outline-none min-w-0"
               />
               
-              <button 
-                onClick={copyToClipboard}
-                className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex shrink-0 shadow-sm"
-                title="Copy to clipboard"
-              >
-                {hasCopied ? <Check size={18} /> : <Copy size={18} />}
-              </button>
+              {/* Обертка для кнопок, чтобы они держались вместе */}
+              <div className="flex gap-2">
+                <button 
+                  onClick={copyToClipboard}
+                  className="flex-1 sm:flex-none flex justify-center items-center p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors shadow-sm"
+                  title="Copy to clipboard"
+                >
+                  {hasCopied ? <Check size={18} /> : <Copy size={18} />}
+                </button>
   
-              <a 
-                href={shareUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 bg-white border border-green-200 hover:bg-green-50 text-green-700 rounded-lg transition-colors flex shrink-0 shadow-sm"
-                title="Open article in new tab"
-              >
-                <ExternalLink size={18} />
-              </a>
+                <a 
+                  href={shareUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 sm:flex-none flex justify-center items-center p-2 bg-white border border-green-200 hover:bg-green-50 text-green-700 rounded-lg transition-colors shadow-sm"
+                  title="Open article in new tab"
+                >
+                  <ExternalLink size={18} />
+                </a>
+              </div>
             </div>
           </div>
         )}
