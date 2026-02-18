@@ -3,7 +3,7 @@ import { GameState, StoryConfig, EvaluationResult, WordPair, SentenceAnalysis } 
 import { generateNextWord, evaluateStory, analyzeSentence } from './services/mistralService';
 import { Button } from './components/Button';
 import { Badge } from './components/Badge';
-import { BookOpen, Sparkles, CheckCircle, AlertCircle, RefreshCw, PenTool, BrainCircuit, ArrowRight, Send, Loader2, Check, X, Wand2, Search, ArrowUp, ArrowDown, Trash2, ChevronRight, ChevronDown, ChevronUp, Menu, Shuffle, PenLine, Download, Settings, KeyRound, Eraser } from 'lucide-react';
+import { BookOpen, Sparkles, CheckCircle, AlertCircle, RefreshCw, PenTool, BrainCircuit, ArrowRight, Send, Loader2, Check, X, Wand2, Search, ArrowUp, ArrowDown, Trash2, ChevronRight, ChevronDown, ChevronUp, Menu, Shuffle, PenLine, Download, Settings, KeyRound, Eraser, Share2, Copy } from 'lucide-react';
 
 // --- Sub-components for Screens ---
 
@@ -797,6 +797,84 @@ Grammar: ${evaluation.grammarFeedback}
     document.body.removeChild(link);
   };
 
+  // 1. Добавляем новые состояния для шаринга
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [hasCopied, setHasCopied] = useState(false);
+  
+  // 2. Функция для отправки текста в Telegraph
+    const handleShareToTelegraph = async () => {
+      setIsSharing(true);
+      setShareUrl(null);
+      
+      try {
+        // Шаг A: Получаем или создаем токен аккаунта Telegraph
+        let token = localStorage.getItem('telegraph_token');
+        if (!token) {
+          const accRes = await fetch('https://api.telegra.ph/createAccount?short_name=RandomStory&author_name=ItalianLearner');
+          const accData = await accRes.json();
+          if (accData.ok) {
+            token = accData.result.access_token;
+            localStorage.setItem('telegraph_token', token);
+          } else {
+            throw new Error('Не удалось создать аккаунт Telegraph');
+          }
+        }
+  
+        // Шаг B: Формируем контент в формате DOM-узлов Telegraph (Node array)
+        const contentNodes = [
+          { tag: 'h3', children: ['Target Vocabulary'] },
+          { tag: 'p', children: [words.map(w => `${w.italian} (${w.english})`).join(', ')] },
+          { tag: 'h3', children: ['The Story'] },
+          { tag: 'p', children: [story] },
+          { tag: 'h3', children: ['AI Feedback'] },
+          { tag: 'p', children: [`Score: ${evaluation.score}/100`] },
+          { tag: 'p', children: [`Logic: ${evaluation.logicalConsistency}`] },
+          { tag: 'p', children: [`Grammar: ${evaluation.grammarFeedback}`] }
+        ];
+  
+        // Шаг C: Создаем страницу через POST-запрос с FormData (лучше всего для обхода CORS)
+        const formData = new FormData();
+        formData.append('access_token', token as string);
+        formData.append('title', 'My Italian Story');
+        formData.append('author_name', 'Random Story App');
+        formData.append('content', JSON.stringify(contentNodes));
+        formData.append('return_content', 'false');
+  
+        const pageRes = await fetch('https://api.telegra.ph/createPage', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const pageData = await pageRes.json();
+        
+        if (pageData.ok) {
+          const url = pageData.result.url;
+          setShareUrl(url);
+          
+          // Сразу копируем в буфер обмена для удобства
+          navigator.clipboard.writeText(url);
+          setHasCopied(true);
+          setTimeout(() => setHasCopied(false), 3000);
+        } else {
+          alert('Не удалось создать страницу: ' + pageData.error);
+        }
+      } catch (error) {
+         console.error('Ошибка при шаринге в Telegraph:', error);
+         alert('Произошла ошибка при создании ссылки.');
+      } finally {
+        setIsSharing(false);
+      }
+    };
+    
+    const copyToClipboard = () => {
+        if (shareUrl) {
+          navigator.clipboard.writeText(shareUrl);
+          setHasCopied(true);
+          setTimeout(() => setHasCopied(false), 3000);
+        }
+      };
+  
   return (
     <div className="max-w-4xl w-full bg-white rounded-3xl shadow-xl p-8 animate-slide-up border border-indigo-50 overflow-y-auto max-h-[90vh]">
       <div className="text-center mb-8">
@@ -860,13 +938,49 @@ Grammar: ${evaluation.grammarFeedback}
         </p>
       </div>
 
-      <div className="flex justify-center gap-4">
-        <Button onClick={handleDownload} variant="secondary">
-           <Download size={18} className="md:mr-2 inline" /> <span className="hidden md:inline">Save Story</span>
-        </Button>
-        <Button onClick={onRestart}>
-           <RefreshCw size={18} className="md:mr-2 inline" /> <span className="hidden md:inline">Start New Lesson</span>
-        </Button>
+      <div className="flex flex-col items-center gap-4">
+        <div className="flex justify-center gap-4 flex-wrap w-full">
+          <Button onClick={handleDownload} variant="secondary">
+              <Download size={18} className="md:mr-2 inline" /> <span className="hidden md:inline">Save Story</span>
+          </Button>
+          
+          <Button 
+            onClick={handleShareToTelegraph} 
+            variant="secondary"
+            disabled={isSharing}
+          >
+              {isSharing ? <Loader2 size={18} className="animate-spin md:mr-2 inline" /> : <Share2 size={18} className="md:mr-2 inline" />}
+              <span className="hidden md:inline">{isSharing ? 'Creating Link...' : 'Share Link'}</span>
+          </Button>
+
+          <Button onClick={onRestart}>
+              <RefreshCw size={18} className="md:mr-2 inline" /> <span className="hidden md:inline">Start New Lesson</span>
+          </Button>
+        </div>
+
+        {/* Блок с результатами генерации ссылки */}
+        {shareUrl && (
+          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl w-full max-w-md animate-slide-up flex flex-col gap-2">
+            <p className="text-sm text-green-800 font-medium text-center">
+              Shareable link created!
+            </p>
+            <div className="flex items-center gap-2">
+              <input 
+                type="text" 
+                readOnly 
+                value={shareUrl} 
+                className="flex-1 px-3 py-2 bg-white border border-green-200 rounded-lg text-sm text-gray-700 outline-none"
+              />
+              <button 
+                onClick={copyToClipboard}
+                className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex shrink-0"
+                title="Copy to clipboard"
+              >
+                {hasCopied ? <Check size={18} /> : <Copy size={18} />}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
