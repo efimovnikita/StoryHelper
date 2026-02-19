@@ -802,78 +802,113 @@ Grammar: ${evaluation.grammarFeedback}
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [hasCopied, setHasCopied] = useState(false);
   
-  // 2. Функция для отправки текста в Telegraph
-    const handleShareToTelegraph = async () => {
-      setIsSharing(true);
-      setShareUrl(null);
-      
-      try {
-        // Шаг A: Получаем или создаем токен аккаунта Telegraph
-        let token = localStorage.getItem('telegraph_token');
-        if (!token) {
-          const accRes = await fetch('https://api.telegra.ph/createAccount?short_name=RandomStory&author_name=ItalianLearner');
-          const accData = await accRes.json();
-          if (accData.ok) {
-            token = accData.result.access_token;
-            localStorage.setItem('telegraph_token', token);
-          } else {
-            throw new Error('Не удалось создать аккаунт Telegraph');
-          }
-        }
+  // Вспомогательная функция для генерации заголовка через Mistral
+  const fetchSmartTitle = async (storyText: string): Promise<string> => {
+    const apiKey = localStorage.getItem('mistral_api_key');
+    if (!apiKey) return 'La mia Storia Italiana'; // Fallback если нет ключа
+
+    try {
+      const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "mistral-small-latest", // Используем быструю и умную модель
+          messages: [
+            {
+              role: "system",
+              content: "Sei un editore letterario esperto. Il tuo compito è dare un titolo breve, creativo e pertinente in italiano alla storia fornita dall'utente. Rispondi SOLO con il titolo, senza virgolette e senza spiegazioni."
+            },
+            {
+              role: "user",
+              content: `Ecco la storia:\n\n${storyText}`
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 20 // Нам нужен только короткий заголовок
+        })
+      });
+
+      const data = await response.json();
+      if (data.choices && data.choices[0]) {
+        // Очищаем заголовок от кавычек, если модель их добавила
+        return data.choices[0].message.content.trim().replace(/^["']|["']$/g, '');
+      }
+      return 'Storia Italiana';
+    } catch (error) {
+      console.error("Error generating title:", error);
+      return 'Storia Improvvisata'; // Fallback при ошибке
+    }
+  };
   
-        // Шаг B: Формируем контент в формате DOM-узлов Telegraph (Node array)
-        const contentNodes = [
-          { tag: 'h3', children: ['Target Vocabulary'] },
-          { tag: 'p', children: [words.map(w => `${w.italian} (${w.english})`).join(', ')] },
-          { tag: 'h3', children: ['The Story'] },
-          { tag: 'p', children: [story] },
-          { tag: 'h3', children: ['AI Feedback'] },
-          { tag: 'p', children: [`Score: ${evaluation.score}/100`] },
-          { tag: 'p', children: [`Logic: ${evaluation.logicalConsistency}`] },
-          { tag: 'p', children: [`Grammar: ${evaluation.grammarFeedback}`] }
-        ];
-  
-        // Шаг C: Создаем страницу через POST-запрос с FormData (лучше всего для обхода CORS)
-        const formData = new FormData();
-        formData.append('access_token', token as string);
-        formData.append('title', 'My Italian Story');
-        formData.append('author_name', 'Random Story App');
-        formData.append('content', JSON.stringify(contentNodes));
-        formData.append('return_content', 'false');
-  
-        const pageRes = await fetch('https://api.telegra.ph/createPage', {
-          method: 'POST',
-          body: formData
-        });
-        
-        const pageData = await pageRes.json();
-        
-        if (pageData.ok) {
-          const url = pageData.result.url;
-          setShareUrl(url);
-          
-          // Сразу копируем в буфер обмена для удобства
-          navigator.clipboard.writeText(url);
-          setHasCopied(true);
-          setTimeout(() => setHasCopied(false), 3000);
+  // 2. Обновленная функция отправки в Telegraph
+  const handleShareToTelegraph = async () => {
+    setIsSharing(true);
+    setShareUrl(null);
+    
+    try {
+      // Шаг A: Получаем или создаем токен Telegraph
+      let token = localStorage.getItem('telegraph_token');
+      if (!token) {
+        const accRes = await fetch('https://api.telegra.ph/createAccount?short_name=RandomStory&author_name=ItalianLearner');
+        const accData = await accRes.json();
+        if (accData.ok) {
+          token = accData.result.access_token;
+          localStorage.setItem('telegraph_token', token);
         } else {
-          alert('Не удалось создать страницу: ' + pageData.error);
+          throw new Error('Не удалось создать аккаунт Telegraph');
         }
-      } catch (error) {
-         console.error('Ошибка при шаринге в Telegraph:', error);
-         alert('Произошла ошибка при создании ссылки.');
-      } finally {
-        setIsSharing(false);
+      }
+
+      // Шаг B (НОВЫЙ): Генерируем умный заголовок
+      const smartTitle = await fetchSmartTitle(story);
+      
+      // Можно добавить немного форматирования для красоты
+      const contentNodes = [
+        { tag: 'p', children: [story] },
+      ];
+
+      const formData = new FormData();
+      formData.append('access_token', token as string);
+      formData.append('title', smartTitle); // ИСПОЛЬЗУЕМ СГЕНЕРИРОВАННЫЙ ЗАГОЛОВОК
+      formData.append('author_name', 'Random Story App');
+      formData.append('content', JSON.stringify(contentNodes));
+      formData.append('return_content', 'false');
+
+      const pageRes = await fetch('https://api.telegra.ph/createPage', {
+        method: 'POST',
+        body: formData
+      });
+      
+      const pageData = await pageRes.json();
+      
+      if (pageData.ok) {
+        const url = pageData.result.url;
+        setShareUrl(url);
+        
+        navigator.clipboard.writeText(url);
+        setHasCopied(true);
+        setTimeout(() => setHasCopied(false), 3000);
+      } else {
+        alert('Не удалось создать страницу: ' + pageData.error);
+      }
+    } catch (error) {
+        console.error('Ошибка при шаринге в Telegraph:', error);
+        alert('Произошла ошибка при создании ссылки.');
+    } finally {
+      setIsSharing(false);
+    }
+  };
+    
+  const copyToClipboard = () => {
+      if (shareUrl) {
+        navigator.clipboard.writeText(shareUrl);
+        setHasCopied(true);
+        setTimeout(() => setHasCopied(false), 3000);
       }
     };
-    
-    const copyToClipboard = () => {
-        if (shareUrl) {
-          navigator.clipboard.writeText(shareUrl);
-          setHasCopied(true);
-          setTimeout(() => setHasCopied(false), 3000);
-        }
-      };
   
   return (
     <div className="max-w-4xl w-full bg-white rounded-3xl shadow-xl p-8 animate-slide-up border border-indigo-50 overflow-y-auto max-h-[90vh]">
