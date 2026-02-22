@@ -1,9 +1,8 @@
 FROM nginx:alpine
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+RUN mkdir -p /app/dist && chmod 777 /app/dist  # чтобы mount не ругался на права
 
-# Убедимся, что директория существует (GCS mount overlay'нет, но на всякий)
-RUN mkdir -p /app/dist && chmod 755 /app/dist
+COPY nginx.conf /etc/nginx/nginx.conf   # ← перезаписываем основной конфиг!
 
 EXPOSE 8080
 
