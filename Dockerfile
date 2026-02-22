@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# Копируем весь код и билдим
+# Копируем весь код и билдим.
 COPY . .
 RUN npm run build
 
