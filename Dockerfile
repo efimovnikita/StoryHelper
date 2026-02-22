@@ -1,9 +1,15 @@
-FROM nginx:alpine
+# Этап 1: сборка
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
 
-RUN mkdir -p /app/dist && chmod 777 /app/dist  # чтобы mount не ругался на права
-
-COPY nginx.conf /etc/nginx/nginx.conf   # ← перезаписываем основной конфиг!
-
+# Этап 2: запуск
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+RUN npm install -g serve
 EXPOSE 8080
-
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["sh", "-c", "serve -s dist -l tcp://0.0.0.0:${PORT:-8080}"]
