@@ -20,7 +20,7 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Копируем кастомный конфиг nginx (обязательно!)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Cloud Run требует, чтобы слушали порт из переменной $PORT (по умолчанию 8080)
+# Cloud Run требует, чтобы слушали порт из переменной $PORT (по умолчанию 8080).
 EXPOSE 8080
 
 CMD ["nginx", "-g", "daemon off;"]
