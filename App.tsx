@@ -4,8 +4,7 @@ import { generateNextWord, evaluateStory, analyzeSentence } from './services/mis
 import { Button } from './components/Button';
 import { Badge } from './components/Badge';
 import { BookOpen, Sparkles, CheckCircle, AlertCircle, RefreshCw, PenTool, BrainCircuit, ArrowRight, Send, Loader2, Check, X, Wand2, Search, ArrowUp, ArrowDown, Trash2, ChevronRight, ChevronDown, ChevronUp, Menu, Shuffle, PenLine, Download, Settings, KeyRound, Eraser, Share2, Copy, ExternalLink } from 'lucide-react';
-import { useRegisterSW } from 'virtual:pwa-register/react';
-const APP_VERSION = "1.1.0";
+const APP_VERSION = "1.1.1";
 
 // --- Sub-components for Screens ---
 const SetupScreen: React.FC<{
@@ -1043,35 +1042,28 @@ Grammar: ${evaluation.grammarFeedback}
   );
   };
 
-const UpdatePrompt = () => {
+const PwaUpdater = () => {
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW();
 
-  if (!needRefresh) return null;
+  useEffect(() => {
+    if (needRefresh) {
+      // Вызываем стандартное окно браузера
+      const userWantsToUpdate = window.confirm(
+        "A new version of the app is ready. Refresh to apply changes?"
+      );
 
-  return (
-    <div className="fixed bottom-4 right-4 z-50 bg-white border border-indigo-100 shadow-xl rounded-2xl p-4 animate-slide-up max-w-sm">
-      <div className="flex items-start gap-4">
-        <div className="bg-indigo-50 p-2 rounded-full text-indigo-600 shrink-0">
-          <RefreshCw size={24} />
-        </div>
-        <div>
-          <h4 className="font-bold text-gray-900 text-sm mb-1">Update Available</h4>
-          <p className="text-xs text-gray-500 mb-3">A new version of the app is ready. Refresh to apply changes.</p>
-          <div className="flex gap-2">
-            <Button onClick={() => updateServiceWorker(true)} className="py-1.5 px-3 text-xs w-auto h-auto">
-              Update Now
-            </Button>
-            <Button onClick={() => setNeedRefresh(false)} variant="secondary" className="py-1.5 px-3 text-xs w-auto h-auto">
-              Later
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+      if (userWantsToUpdate) {
+        updateServiceWorker(true);
+      } else {
+        setNeedRefresh(false);
+      }
+    }
+  }, [needRefresh, updateServiceWorker, setNeedRefresh]);
+
+  return null; // Компонент ничего не рендерит
 };
 
 const App = () => {
@@ -1147,7 +1139,8 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-4 md:p-8 font-sans">
-      <UpdatePrompt />
+
+      <PwaUpdater />
 
       {gameState === GameState.SETUP && (
         <SetupScreen onStart={handleStart} />
