@@ -4,7 +4,9 @@ import { generateNextWord, evaluateStory, analyzeSentence } from './services/mis
 import { Button } from './components/Button';
 import { Badge } from './components/Badge';
 import { BookOpen, Sparkles, CheckCircle, AlertCircle, RefreshCw, PenTool, BrainCircuit, ArrowRight, Send, Loader2, Check, X, Wand2, Search, ArrowUp, ArrowDown, Trash2, ChevronRight, ChevronDown, ChevronUp, Menu, Shuffle, PenLine, Download, Settings, KeyRound, Eraser, Share2, Copy, ExternalLink } from 'lucide-react';
-const APP_VERSION = "1.1.1";
+import { useRegisterSW } from 'virtual:pwa-register/react';
+
+const APP_VERSION = "1.1.2";
 
 // --- Sub-components for Screens ---
 const SetupScreen: React.FC<{
