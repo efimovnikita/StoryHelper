@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { GameState, StoryConfig, EvaluationResult, WordPair, SentenceAnalysis } from './types';
 import { generateNextWord, evaluateStory, analyzeSentence } from './services/mistralService';
+import { translateText } from './services/googleTranslateService';
 import { Button } from './components/Button';
 import { Badge } from './components/Badge';
 import { BookOpen, Sparkles, CheckCircle, AlertCircle, RefreshCw, PenTool, BrainCircuit, ArrowRight, Send, Loader2, Check, X, Wand2, Search, ArrowUp, ArrowDown, Trash2, ChevronRight, ChevronDown, ChevronUp, Menu, Shuffle, PenLine, Download, Settings, KeyRound, Eraser, Share2, Copy, ExternalLink } from 'lucide-react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-const APP_VERSION = "1.1.2";
+const APP_VERSION = "1.2.0";
 
 // --- Sub-components for Screens ---
 const SetupScreen: React.FC<{
@@ -16,6 +17,7 @@ const SetupScreen: React.FC<{
   const [mode, setMode] = useState<'thematic' | 'random'>('thematic');
   const [showSettings, setShowSettings] = useState(false);
   const [apiKey, setApiKey] = useState('');
+  const [googleApiKey, setGoogleApiKey] = useState('');
   const [historyCount, setHistoryCount] = useState(0);
   const [history, setHistory] = useState<string[]>([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -23,6 +25,9 @@ const SetupScreen: React.FC<{
   useEffect(() => {
     const storedKey = localStorage.getItem('mistral_api_key');
     if (storedKey) setApiKey(storedKey);
+
+    const storedGoogleKey = localStorage.getItem('google_translate_api_key');
+    if (storedGoogleKey) setGoogleApiKey(storedGoogleKey);
 
     // Check word history
     const historyStr = localStorage.getItem('mistral_word_history');
@@ -98,6 +103,26 @@ const SetupScreen: React.FC<{
               />
               <p className="text-xs text-slate-400 mt-1">
                 Your key is stored locally in your browser.
+              </p>
+            </div>
+
+            <div className="pt-2 border-t border-slate-200">
+              <div className="flex items-center gap-2 mb-2 text-slate-700 font-medium text-sm">
+                <KeyRound size={16} />
+                <span>Google Translate API Key</span>
+              </div>
+              <input
+                type="password"
+                value={googleApiKey}
+                onChange={(e) => {
+                  setGoogleApiKey(e.target.value);
+                  localStorage.setItem('google_translate_api_key', e.target.value);
+                }}
+                placeholder="Enter your Google Translate API key..."
+                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+              />
+              <p className="text-xs text-slate-400 mt-1">
+                Used for back-translation of your phrases.
               </p>
             </div>
 
@@ -292,15 +317,37 @@ const GameScreen: React.FC<{
   const processSentence = async (text: string) => {
     if (!text.trim()) return;
     setIsAnalyzing(true);
+    
+    // Create a timeout promise
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('TIMEOUT')), 10000)
+    );
+
     try {
-      const result = await analyzeSentence(text);
+      const [translation, result] = await Promise.race([
+        Promise.all([
+          translateText(text),
+          analyzeSentence(text)
+        ]),
+        timeoutPromise
+      ]) as [string, SentenceAnalysis];
+
+      if (translation) {
+        result.englishTranslation = translation;
+      }
+
       setPendingAnalysis(result);
       // Scroll to the input field on mobile devices after analysis results are displayed
       if (textareaRef.current) {
         textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to analyze", error);
+      if (error.message === 'TIMEOUT') {
+        alert("The analysis is taking longer than expected. Please try again.");
+      } else {
+        alert("An error occurred while analyzing the sentence. Please try again.");
+      }
     } finally {
       setIsAnalyzing(false);
       // Keep focus on textarea so user can continue editing if needed

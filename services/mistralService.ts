@@ -158,7 +158,6 @@ export const analyzeSentence = async (sentence: string): Promise<SentenceAnalysi
     Expected structure:
     {
       "original": "string",
-      "englishTranslation": "string",
       "segments": [
         { "text": "string", "isCorrection": boolean }
       ]
@@ -166,31 +165,28 @@ export const analyzeSentence = async (sentence: string): Promise<SentenceAnalysi
   `;
 
   const prompt = `
-    You are an Italian language corrector. Analyze this sentence: "${sentence}".
+  You are an Italian language corrector. Analyze this sentence: "${sentence}".
 
-    Your task:
-    1. If the sentence is grammatically correct and uses vocabulary naturally, return it as a single segment with isCorrection: false.
-    2. If there are errors (grammar, spelling, or unnatural word choice), return the CORRECTED version of the sentence, broken into segments.
-    3. Mark the segments that were CHANGED or CORRECTED as 'isCorrection: true'. 
-    4. Mark the segments that remain the SAME as 'isCorrection: false'.
-    5. IGNORE punctuation differences. Do not mark a segment as a correction if only punctuation changed.
-    6. Provide an English translation of the meaning of the CORRECTED sentence.
+  Your task:
+  1. If the sentence is grammatically correct and uses vocabulary naturally, return it as a single segment with isCorrection: false.
+  2. If there are errors (grammar, spelling, or unnatural word choice), return the CORRECTED version of the sentence, broken into segments.
+  3. Mark the segments that were CHANGED or CORRECTED as 'isCorrection: true'. 
+  4. Mark the segments that remain the SAME as 'isCorrection: false'.
+  5. IGNORE punctuation differences. Do not mark a segment as a correction if only punctuation changed.
 
-    Example Input: "Io andare a casa."
-    Example Output: 
-    {
-      "original": "Io andare a casa.",
-      "englishTranslation": "I am going home.",
-      "segments": [
-        { "text": "Io ", "isCorrection": false },
-        { "text": "vado", "isCorrection": true },
-        { "text": " a casa.", "isCorrection": false }
-      ]
-    }
+  Example Input: "Io andare a casa."
+  Example Output: 
+  {
+    "original": "Io andare a casa.",
+    "segments": [
+      { "text": "Io ", "isCorrection": false },
+      { "text": "vado", "isCorrection": true },
+      { "text": " a casa.", "isCorrection": false }
+    ]
+  }
 
-    ${jsonInstruction}
+  ${jsonInstruction}
   `;
-
   try {
     const response = await mistral.chat.complete({
       model: MODEL_NAME,
